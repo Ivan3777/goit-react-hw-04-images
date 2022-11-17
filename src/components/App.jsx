@@ -1,79 +1,86 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { fetchImages } from 'services/api';
-import Searchbar from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { LoadMore } from './LoadMore/LoadMore';
 import { Loader } from './Loader/Loader';
 import { Modal } from './Modal/Modal';
+import { Searchbar } from './Searchbar/Searchbar';
 
-export class App extends Component {
-  state = {
-    images: [],
-    query: '',
-    page: 1,
-    isLoading: false,
-    modalImage: '',
-    showModal: false,
-    totalHits: 0,
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [modalImage, setModalImage] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [totalHits, setTotslHits] = useState(0);
+
+  useEffect(() => {
+    setIsLoading(true);
+    fetchImages(query, page)
+      .then(data => {
+        setImages(prevState => ({
+          images:
+            page === 1 ? [...data.hits] : [...prevState.images, ...data.hits],
+          totalHits:
+            page === 1
+              ? data.totalHits - data.hits.length
+              : data.totalHits - [...prevState.images, ...data.hits].length,
+        }));
+      })
+      .finally(() => {
+        setIsLoading(false );
+      });
+  }, [query, page]);
+
+  const handleSubmit = query => {
+    setQuery({ query, page: 1 });
   };
 
-  componentDidUpdate = (_, prevState) => {
-    if (
-      this.state.query !== prevState.query ||
-      this.state.page !== prevState.page
-    ) {
-      this.setState({ isLoading: true });
-      fetchImages(this.state.query, this.state.page)
-        .then(data => {
-          this.setState(prevState => ({
-            images:
-              this.state.page === 1
-                ? [...data.hits]
-                : [...prevState.images, ...data.hits],
-            totalHits:
-              this.state.page === 1
-                ? data.totalHits - data.hits.length
-                : data.totalHits - [...prevState.images, ...data.hits].length,
-          }));
-        })
-        .finally(() => {
-          this.setState({ isLoading: false });
-        });
-    }
+  const handleLoadMore = () => {
+    setPage(state => ({ page: state.page + 1 }));
   };
 
-  handleSubmit = query => {
-    this.setState({ query, page: 1 });
-  };
-
-  handleLoadMore = () => {
-    this.setState(state => ({ page: state.page + 1 }));
-  };
-
-  toggleModal = modalImage => {
+  const toggleModal = modalImage => {
     if (!modalImage) {
-      this.setState({ modalImage: '', showModal: false });
+      setModalImage({ modalImage: '', showModal: false });
       return;
     }
-    this.setState({ modalImage, showModal: true });
+    setModalImage({ modalImage, showModal: true });
   };
 
-  render() {
-    return (
-      <>
-        <Searchbar onSubmit={this.handleSubmit} />
-        {this.state.isLoading && <Loader />}
-        <ImageGallery images={this.state.images} openModal={this.toggleModal} />
-        {!!this.state.totalHits && (
-          <LoadMore onLoadMore={this.handleLoadMore} />
-        )}
-        {this.state.showModal && (
-          <Modal
-            modalImage={this.state.modalImage}
-            closeModal={this.toggleModal}
-          />
-        )}
-      </>
-    );
-  }
-}
+  return (
+    <>
+      <Searchbar onSubmit={handleSubmit} />
+      {isLoading && <Loader />}
+      <ImageGallery images={images} openModal={toggleModal} />
+      {!!totalHits && <LoadMore onLoadMore={handleLoadMore} />}
+      {showModal && <Modal modalImage={modalImage} closeModal={toggleModal} />}
+    </>
+  );
+};
+
+
+// useEffect(() => {
+//   if (!name) {
+//     return;
+//   }
+
+//   setLoading(true);
+//   fetchPictures(name, page)
+//     .then(({ data }) => {
+//       setPictures(prevPictures => [...prevPictures, ...data.hits]);
+//       setTotalImages(data.totalHits);
+//       if (data.totalHits === 0) {
+//         toast.error(No images with name "${name}", {
+//           theme: 'colored',
+//         });
+//       }
+//     })
+//     .catch(error => {
+//       toast.error(${error}, {
+//         theme: 'colored',
+//       });
+//     })
+//     .finally(() => setLoading(false));
+// }, [name, page]);
