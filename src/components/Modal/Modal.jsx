@@ -3,28 +3,31 @@ import { useEffect } from 'react';
 
 const modalRoot = document.querySelector('#modal-root');
 
-export const Modal = ({ onClose, children }) => {
+export const Modal = ({ closeModal, modalImage }) => {
   useEffect(() => {
-    const closeByESC = e => {
+    const closeByEsc = e => {
       if (e.code === 'Escape') {
-        onClose();
+        return closeModal();
       }
     };
 
-    window.addEventListener('keydown', closeByESC);
-
-    return () => window.removeEventListener('keydown', closeByESC);
-  }, [onClose]);
+    window.addEventListener('keydown', closeByEsc);
+    return () => {
+      window.removeEventListener('keydown', closeByEsc);
+    };
+  }, [closeModal]);
 
   const handleBackdropClick = e => {
     if (e.target === e.currentTarget) {
-      onClose();
+      return closeModal();
     }
   };
 
   return createPortal(
     <div className="Overlay" onClick={handleBackdropClick}>
-      <div className="Modal">{children}</div>
+      <div className="Modal">
+        <img src={modalImage} alt="" />
+      </div>
     </div>,
     modalRoot
   );
