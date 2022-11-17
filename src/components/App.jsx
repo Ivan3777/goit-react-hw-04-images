@@ -14,6 +14,9 @@ export const App = () => {
   const [modalImage, setModalImage] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [totalHits, setTotslHits] = useState(0);
+console.log(setShowModal);
+console.log(setTotslHits);
+
 
   useEffect(() => {
     setIsLoading(true);
